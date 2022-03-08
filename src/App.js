@@ -6,10 +6,11 @@ import "./App.css";
 function App() {
   const [movies, setMovies] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  function fetchMovieHandler() {
+  /* function fetchMovieHandler() {
     setIsLoading(true);
-    fetch("https://swapi.dev/api/films/", {})
+    fetch("https://swapi.dev/api/film/", {})
       .then((response) => {
         return response.json();
       })
@@ -25,21 +26,34 @@ function App() {
         setMovies(transformedMovies);
         setIsLoading(false);
       });
-  }
-
-  /* async function fetchMovieHandler() {
-    const response = await fetch("https://swapi.dev/api/films/", {});
-    const data = await response.json();
-    const transformedMovies = data.results.map((movieData) => {
-      return {
-        id: movieData.episode_id,
-        title: movieData.title,
-        openingText: movieData.opening_crawl,
-        releaseDate: movieData.release_date,
-      };
-    });
-    setMovies(transformedMovies);
   } */
+
+  async function fetchMovieHandler() {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch("https://swapi.dev/api/films/", {});
+
+      if(!response.ok) {
+        throw new Error('Invalid Response');
+      }
+      const data = await response.json();
+      const transformedMovies = data.results.map((movieData) => {
+        return {
+          id: movieData.episode_id,
+          title: movieData.title,
+          openingText: movieData.opening_crawl,
+          releaseDate: movieData.release_date,
+        };
+      });
+      setMovies(transformedMovies);
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      setError(true);
+    }
+  }
 
   return (
     <React.Fragment>
@@ -48,8 +62,9 @@ function App() {
       </section>
       <section>
         {!isLoading && movies.length > 0 && <MoviesList movies={movies} />}
-        {!isLoading && movies.length === 0 && <p>No Movies Found</p>}
+        {!isLoading && movies.length === 0 && !error && <p>No Movies Found</p>}
         {isLoading && <p>Loading</p>}
+        {error && <p>Could not reach server</p>}
       </section>
     </React.Fragment>
   );
